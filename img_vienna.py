@@ -94,19 +94,19 @@ class DOWNLOAD:
         self.END_DATE = end_date
         self.APPLICATION = 'application=TRUE'
         self.REGISTRATION = '&registration=TRUE'
-        self.REFUSED = '&refused=FALSE'
-        self.EXPRIATION = '&expiration=FALSE'
-        self.WITHDRAWAL = '&withdrawal=FALSE'
+        self.REFUSED = '&refused=TRUE'
+        self.EXPRIATION = '&expiration=TRUE'
+        self.WITHDRAWAL = '&withdrawal=TRUE'
         self.PUBLICATION = '&publication=TRUE'
-        self.CANCEL = '&cancel=FALSE'
-        self.ABANDONMENT = '&abandonment=FALSE'
+        self.CANCEL = '&cancel=TRUE'
+        self.ABANDONMENT = '&abandonment=TRUE'
         self.TRADEMARK = '&trademark=TRUE'
-        self.SERVICEMARK = '&serviceMark=FALSE'
-        self.TRADEMARKSERVICEMARK = '&trademarkServiceMark=FALSE'
-        self.BUSINESSEMBLEM = '&businessEmblem=FALSE'
-        self.COLLECTIVEMARK = '&collectiveMark=FALSE'
-        self.INTERNATIONALMARK = '&internationalMark=FALSE'
-        self.CHARACTER = '&character=FALSE'
+        self.SERVICEMARK = '&serviceMark=TRUE'
+        self.TRADEMARKSERVICEMARK = '&trademarkServiceMark=TRUE'
+        self.BUSINESSEMBLEM = '&businessEmblem=TRUE'
+        self.COLLECTIVEMARK = '&collectiveMark=TRUE'
+        self.INTERNATIONALMARK = '&internationalMark=TRUE'
+        self.CHARACTER = '&character=TRUE'
         self.FIGURE = '&figure=TRUE&figureComposition=TRUE'
         self.COMPOSITIONCHARACTER = '&compositionCharacter=FALSE'
         self.NUMOFROWS = '&numOfRows=500'
@@ -129,7 +129,7 @@ class PARSE_API():
         self.APP_NUM_LIST = []
         self.VIENNA_CODE_LIST = []
         self.SAVE_FOLDER = 'E:/data/viennacode/'
-        self.IMG_SAVE_FOLDER = 'E:/data/viennacode_img_19600101_20191231/'
+        self.IMG_SAVE_FOLDER = 'E:/data/viennacode_total_img_19600101_20191231/'
         os.makedirs(self.SAVE_FOLDER, exist_ok=True)
         os.makedirs(self.IMG_SAVE_FOLDER, exist_ok=True)
         self.DB = database
@@ -185,7 +185,7 @@ class PARSE_API():
         return k_root
 
     def MakeCsvPath(self,start_date, end_date, page_num):
-        save_path = f'{self.SAVE_FOLDER}/{start_date}_{end_date}_{page_num}_.figure_composition.csv'
+        save_path = f'{self.SAVE_FOLDER}/total_{start_date}_{end_date}_{page_num}_.figure_composition.csv'
         return save_path
 
     def MakeImgPath(self, app_num):
@@ -297,6 +297,3 @@ class PARSE_API():
                     return page_num
                 else:
                     return 1
-
-
-

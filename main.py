@@ -2,9 +2,9 @@ from img_vienna import *
 from api_key import API_KEY #API_KEY는 문자열입니다. kipris plus(http://plus.kipris.or.kr/)에서 발급받을 수 있습니다.
 from db_attribute import user, password, host, database_name
 
-VIENNA_TABLE_NAME = 'vienna_small_category'
+VIENNA_TABLE_NAME = 'total_vienna_small_category'
 VIENNA_TABLE_SQL = f'CREATE TABLE {VIENNA_TABLE_NAME} (APP_NUM VARCHAR(13), VIENNA_CODE VARCHAR(100));'
-DATE_PAGE_TABLE_NAME = "date_page_num"
+DATE_PAGE_TABLE_NAME = "total_date_page_num"
 DATA_PAGE_TABLE_SQL = f'CREATE TABLE {DATE_PAGE_TABLE_NAME} (DATE VARCHAR(17), CURRENT_PAGE SMALLINT(1), TOTAL_PAGE SMALLINT(1));'
 DB = DataBase(user=user, password=password, host=host, database_name=database_name)
 
