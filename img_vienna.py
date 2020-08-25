@@ -97,6 +97,39 @@ class DATE:
             self.makeDateList()
         return self.start_full_date_list, self.end_full_date_list
 
+class URL:
+    def __init__(self, start_date, end_date, api_key):
+        self.BASIC_URL = 'http://plus.kipris.or.kr/kipo-api/kipi/trademarkInfoSearchService/getAdvancedSearch?'
+        self.START_DATE = start_date
+        self.END_DATE = end_date
+        self.APPLICATION = 'application=TRUE'
+        self.REGISTRATION = '&registration=TRUE'
+        self.REFUSED = '&refused=TRUE'
+        self.EXPRIATION = '&expiration=TRUE'
+        self.WITHDRAWAL = '&withdrawal=TRUE'
+        self.PUBLICATION = '&publication=TRUE'
+        self.CANCEL = '&cancel=TRUE'
+        self.ABANDONMENT = '&abandonment=TRUE'
+        self.TRADEMARK = '&trademark=TRUE'
+        self.SERVICEMARK = '&serviceMark=TRUE'
+        self.TRADEMARKSERVICEMARK = '&trademarkServiceMark=TRUE'
+        self.BUSINESSEMBLEM = '&businessEmblem=TRUE'
+        self.COLLECTIVEMARK = '&collectiveMark=TRUE'
+        self.INTERNATIONALMARK = '&internationalMark=TRUE'
+        self.CHARACTER = '&character=FALSE'
+        self.FIGURE = '&figure=TRUE&figureComposition=TRUE'
+        self.COMPOSITIONCHARACTER = '&compositionCharacter=FALSE'
+        self.NUMOFROWS = '&numOfRows=500'
+        self.PAGENUM = '&pageNo=1'
+        self.APPLICATIONDATE = f'&applicationDate={self.START_DATE}~{self.END_DATE}'
+        self.SERVICEKEY = api_key
+
+    def returnURL(self, idx):
+        self.URL = f'{self.BASIC_URL}{self.APPLICATION}{self.REGISTRATION}{self.REFUSED}{self.EXPRIATION}{self.WITHDRAWAL}{self.PUBLICATION}{self.CANCEL}{self.ABANDONMENT}{self.TRADEMARK}{self.SERVICEMARK}' \
+                   f'{self.TRADEMARKSERVICEMARK}{self.BUSINESSEMBLEM}{self.COLLECTIVEMARK}{self.INTERNATIONALMARK}{self.CHARACTER}{self.FIGURE}{self.COMPOSITIONCHARACTER}{self.NUMOFROWS}' \
+                   f'&pageNo={str(idx)}{self.APPLICATIONDATE}{self.SERVICEKEY}'
+        return self.URL
+
 class PARSE_API():
     def __init__(self, url):
         self.URL = url
@@ -164,38 +197,6 @@ class PARSE_API():
             return 1
 
 
-class URL:
-    def __init__(self, start_date, end_date, api_key):
-        self.BASIC_URL = 'http://plus.kipris.or.kr/kipo-api/kipi/trademarkInfoSearchService/getAdvancedSearch?'
-        self.START_DATE = start_date
-        self.END_DATE = end_date
-        self.APPLICATION = 'application=TRUE'
-        self.REGISTRATION = '&registration=TRUE'
-        self.REFUSED = '&refused=TRUE'
-        self.EXPRIATION = '&expiration=TRUE'
-        self.WITHDRAWAL = '&withdrawal=TRUE'
-        self.PUBLICATION = '&publication=TRUE'
-        self.CANCEL = '&cancel=TRUE'
-        self.ABANDONMENT = '&abandonment=TRUE'
-        self.TRADEMARK = '&trademark=TRUE'
-        self.SERVICEMARK = '&serviceMark=TRUE'
-        self.TRADEMARKSERVICEMARK = '&trademarkServiceMark=TRUE'
-        self.BUSINESSEMBLEM = '&businessEmblem=TRUE'
-        self.COLLECTIVEMARK = '&collectiveMark=TRUE'
-        self.INTERNATIONALMARK = '&internationalMark=TRUE'
-        self.CHARACTER = '&character=FALSE'
-        self.FIGURE = '&figure=TRUE&figureComposition=TRUE'
-        self.COMPOSITIONCHARACTER = '&compositionCharacter=FALSE'
-        self.NUMOFROWS = '&numOfRows=500'
-        self.PAGENUM = '&pageNo=1'
-        self.APPLICATIONDATE = f'&applicationDate={self.START_DATE}~{self.END_DATE}'
-        self.SERVICEKEY = api_key
-
-    def returnURL(self, idx):
-        self.URL = f'{self.BASIC_URL}{self.APPLICATION}{self.REGISTRATION}{self.REFUSED}{self.EXPRIATION}{self.WITHDRAWAL}{self.PUBLICATION}{self.CANCEL}{self.ABANDONMENT}{self.TRADEMARK}{self.SERVICEMARK}' \
-                   f'{self.TRADEMARKSERVICEMARK}{self.BUSINESSEMBLEM}{self.COLLECTIVEMARK}{self.INTERNATIONALMARK}{self.CHARACTER}{self.FIGURE}{self.COMPOSITIONCHARACTER}{self.NUMOFROWS}' \
-                   f'&pageNo={str(idx)}{self.APPLICATIONDATE}{self.SERVICEKEY}'
-        return self.URL
 
 class MAKEPATH:
     def __init__(self, img_save_folder):
@@ -207,8 +208,9 @@ class MAKEPATH:
         return save_path
 
 class DOWNLOAD:
-    def __init__(self, database, biblo_table_name, date_table_name):
+    def __init__(self, database, make_path, biblo_table_name, date_table_name):
         self.DB = database
+        self.MAKE_PATH = make_path
         self.BIBLO_TABLE_NAME = biblo_table_name
         self.DATE_TABLE_NAME = date_table_name
         self.BIBLO_LIST = ['agentName', 'applicationDate', 'applicationNumber', 'applicationStatus', 'classificationCode',
@@ -221,7 +223,7 @@ class DOWNLOAD:
         self.BIBLIO_DF = pd.DataFrame(columns=self.BIBLO_LIST)
 
     def DownloadImg(self, img_url, app_num):
-        save_path = self.MakeImgPath(app_num)
+        save_path = self.MAKE_PATH.MakeImgPath(app_num)
         if not os.path.exists(save_path):
             try:
                 img = requests.get(img_url).content
@@ -317,6 +319,7 @@ class DOWNLOAD:
                 else:
                     pass
             self.BIBLIO_DF.loc[len(self.BIBLIO_DF)] = basket
+        # self.BIBLIO_DF.to_csv('./test.csv', index=False, encoding='euc-kr')
         self.DB.appendDataFrameToTable(df=self.BIBLIO_DF, table_name=self.BIBLO_TABLE_NAME)
 
 
@@ -331,14 +334,14 @@ class EXECUTE():
         self.API_KEY = api_key
     
     def getLastYearAndMonth(self):
-        sql = 'select * from date_page_num;'
+        sql = f'select * from {self.DOWNLOAD.DATE_TABLE_NAME};'
         result = self.DB.conn.execute(sql)
         row = result.fetchall()
-        self.LAST_YEAR = row[len(row)][0][0:4]
-        self.LAST_YEAR = int(row[len(row)][0][0:4])
-        self.LAST_MONTH = int(row[len(row)][0][4:6])
-        self.LAST_PAGE = row[len(row)][1] + 1
-        self.TOTAL_PAGE = row[len(row)][2]
+        self.LAST_YEAR = int(row[len(row)-1][0][0:4])
+        self.LAST_MONTH = int(row[len(row)-1][0][4:6])
+        self.LAST_PAGE = row[len(row)-1][1] + 1
+        self.TOTAL_PAGE = row[len(row)-1][2]
+        return self.LAST_YEAR, self.LAST_MONTH, self.LAST_PAGE, self.TOTAL_PAGE
 
     def downloadImgAndBiblo(self, idx, page_num, start_date, end_date):
         print(f'Connecting {idx}/{page_num - 1}')
@@ -348,21 +351,20 @@ class EXECUTE():
         self.DOWNLOAD.saveBiblioInfoAndImg(parsed_data)
         self.DB.appendDataToTable(data=current_state, table_name=self.DOWNLOAD.DATE_TABLE_NAME)
         print(current_state)
-        sleep(1)
 
     def saveImgAndVienna(self, start_date, end_date):
-        page_num = self.DOWNLOAD.GetPageNum()
+        url = URL(start_date, end_date, self.API_KEY).returnURL(1)
+        page_num = PARSE_API(url).GetPageNum()
         print(f'The number of page: {page_num - 1}')
-        sleep(1)
         if page_num == 1:
-            self.downloadImgAndBiblo(1, page_num)
+            self.downloadImgAndBiblo(1, page_num, start_date, end_date)
         else:
             for idx in range(1, page_num):
                 self.downloadImgAndBiblo(idx, page_num, start_date, end_date)
 
     def saveFromLastMonth(self, last_year, last_month, last_page, total_page):
         print(f'last year:{last_year}, last_month:{last_month}, last_page:{last_page}, total_page:{total_page}')
-        start_date_list, end_date_list = DATE(last_year, last_month)
+        start_date_list, end_date_list = DATE(last_year, last_month).returnDateList()
         i = 0
         for start_date, end_date in tqdm(zip(start_date_list, end_date_list)):
             if i == 0:
@@ -375,6 +377,6 @@ class EXECUTE():
     def saveFromLastYear(self, last_year, last_month):
         print(f'START FROM NEW YEAR! last year:{last_year}, last_month:{last_month}')
         for year in range(last_year, 1959, -1):
-            start_date_list, end_date_list = DATE(year, last_month)
+            start_date_list, end_date_list = DATE(year, last_month).returnDateList()
             for start_date, end_date in tqdm(zip(start_date_list, end_date_list)):
                 self.saveImgAndVienna(start_date, end_date)
