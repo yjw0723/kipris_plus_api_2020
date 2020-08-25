@@ -2,6 +2,18 @@ from img_vienna import *
 from api_key import API_KEY #API_KEY는 문자열입니다. kipris plus(http://plus.kipris.or.kr/)에서 발급받을 수 있습니다.
 from db_attribute import user, password, host, database_name
 
+"""
+db_attribute example:
+
+user = 'root'
+password = '1234'
+host = 'localhost'
+database_name = 'db_name'
+
+API_KEY example:
+API_KEY = '&ServiceKey=siEj7vZ00RvZGu=2ssRtLL2OP7K0AjJda1n=odrfN7Q='
+"""
+
 IMG_SAVE_FOLDER = 'E:/data/viennacode_total_img_19600101_20191231'
 BIBLO_TABLE_NAME = 'total_vienna_small_category'
 DATE_PAGE_TABLE_NAME = "total_date_page_num"
