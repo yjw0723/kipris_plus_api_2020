@@ -47,8 +47,6 @@ execute = EXECUTE(db, download, API_KEY)
 
 LAST_YEAR = 2019
 LAST_MONTH = 1
-LAST_PAGE = 1
-YEAR_RANGE = list(range(LAST_YEAR, 1959 ,-1))
 
 if not BIBLO_TABLE_NAME in db.TABLELIST:
     db.executeSQL(BIBLO_TABLE_SQL)
@@ -56,7 +54,7 @@ if not BIBLO_TABLE_NAME in db.TABLELIST:
 if __name__ == '__main__':
     if not DATE_PAGE_TABLE_NAME in db.TABLELIST:
         db.executeSQL(DATA_PAGE_TABLE_SQL)
-        execute.saveFromLastYear(2019, 1)
+        execute.saveFromLastYear(LAST_YEAR, LAST_MONTH)
     else:
         last_year, last_month, last_page, total_page = execute.getLastYearAndMonth()
         if last_page != total_page:
