@@ -1,5 +1,4 @@
-import os, requests, re
-import xml.etree.ElementTree as ET
+import os, requests
 import urllib.request
 from time import sleep
 import http
@@ -7,6 +6,7 @@ import urllib3
 from tqdm import tqdm
 import pandas as pd
 from sqlalchemy import create_engine
+import xmltodict, json
 
 class DataBase:
     def __init__(self, host, user, password, database_name):
@@ -59,36 +59,113 @@ class DataBase:
         sql = f'DROP TABLE {table_name};'
         self.conn.execute(sql)
 
-
-#다운로드(19600101 ~ 20191231)
-class MAKEDATE:
-    def __init__(self ,DB, last_year, last_month):
-        self.DB = DB
+class DATE:
+    def __init__(self, last_year, last_month=1):
         self.LAST_YEAR = last_year
         self.LAST_MONTH = last_month
+        self.MONTH_LIST = []
+        self.start_full_date_list = []
+        self.end_full_date_list = []
+        self.DATE_LIST = []
+
+    def initMonthAndDateList(self):
         self.MONTH_LIST = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
-        self.MONTH_LIST = self.MONTH_LIST[self.LAST_MONTH-1:]
-        self.start_date_list = []
-        self.end_date_list = []
         self.DATE_LIST = ['31', '28', '31', '30', '31', '30', '31', '31', '30', '31', '30', '31']
         if int(self.LAST_YEAR) % 4 == 0:
-            self.DATE_LIST[1] = 29
+            self.DATE_LIST[1] = '29'
             if int(self.LAST_YEAR) % 100 == 0:
-                self.DATE_LIST[1] = 28
+                self.DATE_LIST[1] = '28'
                 if int(self.LAST_YEAR) % 400 == 0:
-                    self.DATE_LIST[1] = 29
+                    self.DATE_LIST[1] = '29'
             else:
-                self.DATE_LIST[1] = 28
-        self.DATE_LIST = self.DATE_LIST[self.LAST_MONTH - 1:]
+                self.DATE_LIST[1] = '29'
+
+    def makeDateList(self):
         for month, date in zip(self.MONTH_LIST, self.DATE_LIST):
             start_date = f'{self.LAST_YEAR}{month}01'
             end_date = f'{self.LAST_YEAR}{month}{date}'
-            self.start_date_list.append(start_date)
-            self.end_date_list.append(end_date)
+            self.start_full_date_list.append(start_date)
+            self.end_full_date_list.append(end_date)
 
-class DOWNLOAD:
-    def __init__(self, api_key, start_date, end_date):
-        self.SAVE_ROOT_PATH = 'E:/data/trademark_from_1960/'
+    def returnDateList(self):
+        self.initMonthAndDateList()
+        if self.LAST_MONTH != 1:
+            self.MONTH_LIST = self.MONTH_LIST[self.LAST_MONTH - 1:]
+            self.DATE_LIST = self.DATE_LIST[self.LAST_MONTH - 1:]
+            self.makeDateList()
+        else:
+            self.makeDateList()
+        return self.start_full_date_list, self.end_full_date_list
+
+class PARSE_API():
+    def __init__(self, url):
+        self.URL = url
+
+    def Parsing(self):
+        try:
+            response = urllib.request.urlopen(self.URL)
+        except urllib.error.URLError as e:
+            print(e)
+            print('urllib.error.URLError. Plz wait for 1 minutes')
+            sleep(10)
+            response = urllib.request.urlopen(self.URL)
+            pass
+        except urllib.error.HTTPError as e:
+            print(e)
+            print('urllib.error.HTTPError. Plz wait for 1 minutes')
+            sleep(10)
+            response = urllib.request.urlopen(self.URL)
+            pass
+        except http.client.HTTPException as e:
+            print(e)
+            print('http.client.HTTPException. Plz wait for 1 minute')
+            sleep(10)
+            response = urllib.request.urlopen(self.URL)
+            pass
+        except requests.exceptions.ConnectionError as e:
+            print(e)
+            print('requests.exceptions.ConnectionError. Plz wait for 1 minute')
+            sleep(10)
+            response = urllib.request.urlopen(self.URL)
+            pass
+        except TimeoutError as e:
+            print(e)
+            print('TimeoutError. Plz wait for 1 minute')
+            sleep(10)
+            response = urllib.request.urlopen(self.URL)
+            pass
+        except urllib3.exceptions.NewConnectionError as e:
+            print(e)
+            print('urllib3.exceptions.NewConnectionError. Plz wait for 1 minute')
+            sleep(10)
+            response = urllib.request.urlopen(self.URL)
+            pass
+        except urllib3.exceptions.MaxRetryError as e:
+            print(e)
+            print('urllib3.exceptions.MaxRetryError. Plz wait for 1 minute')
+            sleep(10)
+            response = urllib.request.urlopen(self.URL)
+            pass
+        responseData = response.read()
+        responseData = xmltodict.parse(responseData)
+        responseData = json.dumps(responseData)
+        responseData = json.loads(responseData)
+
+        return responseData
+
+    def GetPageNum(self):
+        responseData = self.Parsing()
+        count_num = responseData['response']['count']['totalCount']
+        if int(count_num) > 500:
+            print(f'total number of images:{count_num}')
+            page_num = int((int(count_num) / 500) + 2)
+            return page_num
+        else:
+            return 1
+
+
+class URL:
+    def __init__(self, start_date, end_date, api_key):
         self.BASIC_URL = 'http://plus.kipris.or.kr/kipo-api/kipi/trademarkInfoSearchService/getAdvancedSearch?'
         self.START_DATE = start_date
         self.END_DATE = end_date
@@ -106,91 +183,42 @@ class DOWNLOAD:
         self.BUSINESSEMBLEM = '&businessEmblem=TRUE'
         self.COLLECTIVEMARK = '&collectiveMark=TRUE'
         self.INTERNATIONALMARK = '&internationalMark=TRUE'
-        self.CHARACTER = '&character=TRUE'
+        self.CHARACTER = '&character=FALSE'
         self.FIGURE = '&figure=TRUE&figureComposition=TRUE'
         self.COMPOSITIONCHARACTER = '&compositionCharacter=FALSE'
         self.NUMOFROWS = '&numOfRows=500'
         self.PAGENUM = '&pageNo=1'
         self.APPLICATIONDATE = f'&applicationDate={self.START_DATE}~{self.END_DATE}'
         self.SERVICEKEY = api_key
-        self.URL = f'{self.BASIC_URL}{self.APPLICATION}{self.REGISTRATION}{self.REFUSED}{self.EXPRIATION}{self.WITHDRAWAL}{self.PUBLICATION}{self.CANCEL}{self.ABANDONMENT}{self.TRADEMARK}{self.SERVICEMARK}' \
-                   f'{self.TRADEMARKSERVICEMARK}{self.BUSINESSEMBLEM}{self.COLLECTIVEMARK}{self.INTERNATIONALMARK}{self.CHARACTER}{self.FIGURE}{self.COMPOSITIONCHARACTER}{self.NUMOFROWS}' \
-                   f'{self.PAGENUM}{self.APPLICATIONDATE}{self.SERVICEKEY}'
 
-    def updateURL(self, idx):
+    def returnURL(self, idx):
         self.URL = f'{self.BASIC_URL}{self.APPLICATION}{self.REGISTRATION}{self.REFUSED}{self.EXPRIATION}{self.WITHDRAWAL}{self.PUBLICATION}{self.CANCEL}{self.ABANDONMENT}{self.TRADEMARK}{self.SERVICEMARK}' \
                    f'{self.TRADEMARKSERVICEMARK}{self.BUSINESSEMBLEM}{self.COLLECTIVEMARK}{self.INTERNATIONALMARK}{self.CHARACTER}{self.FIGURE}{self.COMPOSITIONCHARACTER}{self.NUMOFROWS}' \
                    f'&pageNo={str(idx)}{self.APPLICATIONDATE}{self.SERVICEKEY}'
         return self.URL
 
-class PARSE_API():
-    def __init__(self, url, database, table_name):
-        self.URL = url
-        self.APP_NUM_LIST = []
-        self.VIENNA_CODE_LIST = []
-        self.SAVE_FOLDER = 'E:/data/viennacode/'
-        self.IMG_SAVE_FOLDER = 'E:/data/viennacode_total_img_19600101_20191231/'
-        os.makedirs(self.SAVE_FOLDER, exist_ok=True)
+class MAKEPATH:
+    def __init__(self, img_save_folder):
+        self.IMG_SAVE_FOLDER = img_save_folder
         os.makedirs(self.IMG_SAVE_FOLDER, exist_ok=True)
-        self.DB = database
-        self.TABLE_NAME = table_name
-
-    def Parsing(self):
-        try:
-            k_tree = ET.parse(urllib.request.urlopen(self.URL))
-        except urllib.error.URLError as e:
-            print(e)
-            print('urllib.error.URLError. Plz wait for 1 minutes')
-            sleep(10)
-            k_tree = ET.parse(urllib.request.urlopen(self.URL))
-            pass
-        except urllib.error.HTTPError as e:
-            print(e)
-            print('urllib.error.HTTPError. Plz wait for 1 minutes')
-            sleep(10)
-            k_tree = ET.parse(urllib.request.urlopen(self.URL))
-            pass
-        except http.client.HTTPException as e:
-            print(e)
-            print('http.client.HTTPException. Plz wait for 1 minute')
-            sleep(10)
-            k_tree = ET.parse(urllib.request.urlopen(self.URL))
-            pass
-        except requests.exceptions.ConnectionError as e:
-            print(e)
-            print('requests.exceptions.ConnectionError. Plz wait for 1 minute')
-            sleep(10)
-            k_tree = ET.parse(urllib.request.urlopen(self.URL))
-            pass
-        except TimeoutError as e:
-            print(e)
-            print('TimeoutError. Plz wait for 1 minute')
-            sleep(10)
-            k_tree = ET.parse(urllib.request.urlopen(self.URL))
-            pass
-        except urllib3.exceptions.NewConnectionError as e:
-            print(e)
-            print('urllib3.exceptions.NewConnectionError. Plz wait for 1 minute')
-            sleep(10)
-            k_tree = ET.parse(urllib.request.urlopen(self.URL))
-            pass
-        except urllib3.exceptions.MaxRetryError as e:
-            print(e)
-            print('urllib3.exceptions.MaxRetryError. Plz wait for 1 minute')
-            sleep(10)
-            k_tree = ET.parse(urllib.request.urlopen(self.URL))
-            pass
-        k_root = k_tree.getroot()
-
-        return k_root
-
-    def MakeCsvPath(self,start_date, end_date, page_num):
-        save_path = f'{self.SAVE_FOLDER}/total_{start_date}_{end_date}_{page_num}_.figure_composition.csv'
-        return save_path
 
     def MakeImgPath(self, app_num):
         save_path = os.path.join(self.IMG_SAVE_FOLDER, f'{app_num}.jpg')
         return save_path
+
+class DOWNLOAD:
+    def __init__(self, database, biblo_table_name, date_table_name):
+        self.DB = database
+        self.BIBLO_TABLE_NAME = biblo_table_name
+        self.DATE_TABLE_NAME = date_table_name
+        self.BIBLO_LIST = ['agentName', 'applicationDate', 'applicationNumber', 'applicationStatus', 'classificationCode',
+                           'internationalRegisterDate', 'internationalRegisterNumber', 'priorityDate','priorityNumber', 'publicationDate',
+                           'publicationNumber', 'regPrivilegeName', 'regReferenceNumber', 'registrationDate', 'registrationNumber',
+                           'registrationPublicDate', 'registrationPublicNumber', 'title', 'viennaCode']
+        self.BIBLIO_DF = pd.DataFrame(columns=self.BIBLO_LIST)
+
+    def bibloDfInit(self):
+        self.BIBLIO_DF = pd.DataFrame(columns=self.BIBLO_LIST)
 
     def DownloadImg(self, img_url, app_num):
         save_path = self.MakeImgPath(app_num)
@@ -268,32 +296,85 @@ class PARSE_API():
                 print('requests.exceptions.ChunkedEncodingError')
                 pass
 
-    def saveAppVienna(self):
-        k_root = self.Parsing()
-        for child_1 in k_root.iter('item'):
-            for child_2 in child_1.getchildren():
-                if child_2.tag == 'applicationNumber':
-                    app_num = child_2.text
-                    self.APP_NUM_LIST.append(app_num)
-                elif child_2.tag=='bigDrawing':
-                    img_url = child_2.text
-                    self.DownloadImg(img_url, app_num)
-                elif child_2.tag == 'viennaCode':
-                    if child_2.text is None:
-                        self.VIENNA_CODE_LIST.append('None')
-                    else:
-                        self.VIENNA_CODE_LIST.append(child_2.text)
-        df = pd.DataFrame({'APP_NUM':self.APP_NUM_LIST, 'VIENNA_CODE':self.VIENNA_CODE_LIST}, columns=['APP_NUM', 'VIENNA_CODE'])
-        self.DB.appendDataFrameToTable(df=df, table_name=self.TABLE_NAME)
+    def ifNone(self, data):
+        if data == None:
+            return ''
+        else:
+            return str(data)
 
-    def GetPageNum(self):
-        k_root = self.Parsing()
-        for child in k_root.find('count'):
-            if child.tag == 'totalCount':
-                count_num = child.text
-                if int(count_num) > 500:
-                    print(f'total number of images:{count_num}')
-                    page_num = int((int(count_num) / 500) + 2)
-                    return page_num
+    def saveBiblioInfoAndImg(self, responseData):
+        biblioinfo = responseData['response']['body']['items']['item']
+
+        for data in biblioinfo:
+            basket = []
+            for biblio_name in self.BIBLO_LIST:
+                basket.append(self.ifNone(data[biblio_name]))
+            if data['bigDrawing'] != None:
+                self.DownloadImg(data['bigDrawing'], str(data['applicationNumber']))
+            else:
+                if data['drawing'] != None:
+                    self.DownloadImg(data['drawing'], str(data['applicationNumber']))
                 else:
-                    return 1
+                    pass
+            self.BIBLIO_DF.loc[len(self.BIBLIO_DF)] = basket
+        self.DB.appendDataFrameToTable(df=self.BIBLIO_DF, table_name=self.BIBLO_TABLE_NAME)
+
+
+class EXECUTE():
+    def __init__(self, database, download, api_key):
+        self.DB = database
+        self.DOWNLOAD = download
+        self.LAST_YEAR = 0
+        self.LAST_MONTH = 0
+        self.LAST_PAGE = 0
+        self.TOTAL_PAGE = 0
+        self.API_KEY = api_key
+    
+    def getLastYearAndMonth(self):
+        sql = 'select * from date_page_num;'
+        result = self.DB.conn.execute(sql)
+        row = result.fetchall()
+        self.LAST_YEAR = row[len(row)][0][0:4]
+        self.LAST_YEAR = int(row[len(row)][0][0:4])
+        self.LAST_MONTH = int(row[len(row)][0][4:6])
+        self.LAST_PAGE = row[len(row)][1] + 1
+        self.TOTAL_PAGE = row[len(row)][2]
+
+    def downloadImgAndBiblo(self, idx, page_num, start_date, end_date):
+        print(f'Connecting {idx}/{page_num - 1}')
+        url = URL(start_date, end_date, self.API_KEY).returnURL(idx)
+        parsed_data = PARSE_API(url).Parsing()
+        current_state = (f'{start_date}~{end_date}', idx, page_num)
+        self.DOWNLOAD.saveBiblioInfoAndImg(parsed_data)
+        self.DB.appendDataToTable(data=current_state, table_name=self.DOWNLOAD.DATE_TABLE_NAME)
+        print(current_state)
+        sleep(1)
+
+    def saveImgAndVienna(self, start_date, end_date):
+        page_num = self.DOWNLOAD.GetPageNum()
+        print(f'The number of page: {page_num - 1}')
+        sleep(1)
+        if page_num == 1:
+            self.downloadImgAndBiblo(1, page_num)
+        else:
+            for idx in range(1, page_num):
+                self.downloadImgAndBiblo(idx, page_num, start_date, end_date)
+
+    def saveFromLastMonth(self, last_year, last_month, last_page, total_page):
+        print(f'last year:{last_year}, last_month:{last_month}, last_page:{last_page}, total_page:{total_page}')
+        start_date_list, end_date_list = DATE(last_year, last_month)
+        i = 0
+        for start_date, end_date in tqdm(zip(start_date_list, end_date_list)):
+            if i == 0:
+                for idx in range(last_page, total_page):
+                    self.downloadImgAndBiblo(idx, total_page, start_date, end_date)
+                i += 1
+            else:
+                self.saveImgAndVienna(start_date, end_date)
+
+    def saveFromLastYear(self, last_year, last_month):
+        print(f'START FROM NEW YEAR! last year:{last_year}, last_month:{last_month}')
+        for year in range(last_year, 1959, -1):
+            start_date_list, end_date_list = DATE(year, last_month)
+            for start_date, end_date in tqdm(zip(start_date_list, end_date_list)):
+                self.saveImgAndVienna(start_date, end_date)
