@@ -29,7 +29,7 @@ BIBLO_TABLE_SQL = sql = f'CREATE TABLE {BIBLO_TABLE_NAME} ( ' \
       f'priorityNumber VARCHAR(500),' \
       f'publicationDate VARCHAR(8),' \
       f'publicationNumber VARCHAR(14),' \
-      f'regPrivilegeName VARCHAR(500),' \
+      f'regPrivilegeName VARCHAR(1000),' \
       f'regReferenceNumber VARCHAR(20),' \
       f'registrationDate VARCHAR(8),' \
       f'registrationNumber VARCHAR(14),' \
