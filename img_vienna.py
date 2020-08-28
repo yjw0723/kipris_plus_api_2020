@@ -179,6 +179,7 @@ class PARSE_API():
             sleep(10)
             response = urllib.request.urlopen(self.URL)
             pass
+        print('Converting xml to dictionary')
         responseData = response.read()
         responseData = xmltodict.parse(responseData)
         responseData = json.dumps(responseData)
@@ -305,9 +306,10 @@ class DOWNLOAD:
             return str(data)
 
     def saveBiblioInfoAndImg(self, responseData):
+        print('Saving API data')
         biblioinfo = responseData['response']['body']['items']['item']
 
-        for data in biblioinfo:
+        for data in tqdm(biblioinfo):
             basket = []
             for biblio_name in self.BIBLO_LIST:
                 basket.append(self.ifNone(data[biblio_name]))
@@ -320,6 +322,7 @@ class DOWNLOAD:
                     pass
             self.BIBLIO_DF.loc[len(self.BIBLIO_DF)] = basket
         # self.BIBLIO_DF.to_csv('./test.csv', index=False, encoding='euc-kr')
+        print('Update DB table')
         self.DB.appendDataFrameToTable(df=self.BIBLIO_DF, table_name=self.BIBLO_TABLE_NAME)
 
 
