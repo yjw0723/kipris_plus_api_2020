@@ -217,7 +217,7 @@ class DOWNLOAD:
         self.BIBLO_LIST = ['agentName', 'applicationDate', 'applicationNumber', 'applicationStatus', 'classificationCode',
                            'internationalRegisterDate', 'internationalRegisterNumber', 'priorityDate','priorityNumber', 'publicationDate',
                            'publicationNumber', 'regPrivilegeName', 'regReferenceNumber', 'registrationDate', 'registrationNumber',
-                           'registrationPublicDate', 'registrationPublicNumber', 'title', 'viennaCode']
+                           'registrationPublicDate', 'registrationPublicNumber', 'title', 'viennaCode', 'bigDrawing', 'drawing']
         self.BIBLIO_DF = pd.DataFrame(columns=self.BIBLO_LIST)
 
     def bibloDfInit(self):
@@ -313,18 +313,18 @@ class DOWNLOAD:
             basket = []
             for biblio_name in self.BIBLO_LIST:
                 basket.append(self.ifNone(data[biblio_name]))
-            if data['bigDrawing'] != None:
-                self.DownloadImg(data['bigDrawing'], str(data['applicationNumber']))
-            else:
-                if data['drawing'] != None:
-                    self.DownloadImg(data['drawing'], str(data['applicationNumber']))
-                else:
-                    pass
+            # if data['bigDrawing'] != None:
+            #     self.DownloadImg(data['bigDrawing'], str(data['applicationNumber']))
+            # else:
+            #     if data['drawing'] != None:
+            #         self.DownloadImg(data['drawing'], str(data['applicationNumber']))
+            #     else:
+            #         pass
             self.BIBLIO_DF.loc[len(self.BIBLIO_DF)] = basket
         # self.BIBLIO_DF.to_csv('./test.csv', index=False, encoding='euc-kr')
         print('Update DB table')
         self.DB.appendDataFrameToTable(df=self.BIBLIO_DF, table_name=self.BIBLO_TABLE_NAME)
-
+        self.bibloDfInit()
 
 class EXECUTE():
     def __init__(self, database, download, api_key):
@@ -379,7 +379,7 @@ class EXECUTE():
 
     def saveFromLastYear(self, last_year, last_month):
         print(f'START FROM NEW YEAR! last year:{last_year}, last_month:{last_month}')
-        for year in range(last_year, 1959, -1):
+        for year in range(last_year, 2000, -1):
             start_date_list, end_date_list = DATE(year, last_month).returnDateList()
             for start_date, end_date in tqdm(zip(start_date_list, end_date_list)):
                 self.saveImgAndVienna(start_date, end_date)

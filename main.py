@@ -36,7 +36,9 @@ BIBLO_TABLE_SQL = sql = f'CREATE TABLE {BIBLO_TABLE_NAME} ( ' \
       f'registrationPublicDate VARCHAR(8),' \
       f'registrationPublicNumber VARCHAR(20),' \
       f'title VARCHAR(1000),' \
-      f'viennaCode VARCHAR(500)' \
+      f'viennaCode VARCHAR(500),' \
+      f'bigDrawing VARCHAR(200),' \
+      f'drawing VARCHAR(200)' \
       f');'
 
 DATA_PAGE_TABLE_SQL = f'CREATE TABLE {DATE_PAGE_TABLE_NAME} (DATE VARCHAR(17), CURRENT_PAGE SMALLINT(1), TOTAL_PAGE SMALLINT(1));'
