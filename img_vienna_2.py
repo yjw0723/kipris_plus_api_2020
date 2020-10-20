@@ -119,9 +119,10 @@ class URL:
         self.BUSINESSEMBLEM = '&businessEmblem=TRUE'
         self.COLLECTIVEMARK = '&collectiveMark=TRUE'
         self.INTERNATIONALMARK = '&internationalMark=TRUE'
-        self.CHARACTER = '&character=FALSE'
-        self.FIGURE = '&figure=TRUE&figureComposition=TRUE'
-        self.COMPOSITIONCHARACTER = '&compositionCharacter=FALSE'
+        self.CHARACTER = '&character=TRUE'
+        self.FIGURE = '&figure=TRUE&figureComposition=FALSE'
+        self.COMPOSITIONCHARACTER = '&compositionCharacter=TRUE'
+        self.FIGURECOMPOSITON = '&figureComposition=TRUE'
         self.NUMOFROWS = '&numOfRows=500'
         self.PAGENUM = '&pageNo=1'
         self.APPLICATIONDATE = f'&applicationDate={self.START_DATE}~{self.END_DATE}'
@@ -129,7 +130,7 @@ class URL:
 
     def returnURL(self, idx):
         self.URL = f'{self.BASIC_URL}{self.APPLICATION}{self.REGISTRATION}{self.REFUSED}{self.EXPRIATION}{self.WITHDRAWAL}{self.PUBLICATION}{self.CANCEL}{self.ABANDONMENT}{self.TRADEMARK}{self.SERVICEMARK}' \
-                   f'{self.TRADEMARKSERVICEMARK}{self.BUSINESSEMBLEM}{self.COLLECTIVEMARK}{self.INTERNATIONALMARK}{self.CHARACTER}{self.FIGURE}{self.COMPOSITIONCHARACTER}{self.NUMOFROWS}' \
+                   f'{self.TRADEMARKSERVICEMARK}{self.BUSINESSEMBLEM}{self.COLLECTIVEMARK}{self.INTERNATIONALMARK}{self.CHARACTER}{self.FIGURE}{self.COMPOSITIONCHARACTER}{self.FIGURECOMPOSITON}{self.NUMOFROWS}' \
                    f'&pageNo={str(idx)}{self.APPLICATIONDATE}{self.SERVICEKEY}'
         return self.URL
 
