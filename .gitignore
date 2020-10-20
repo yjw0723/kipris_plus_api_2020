@@ -129,3 +129,4 @@ dmypy.json
 api_key.py
 db_attribute.py
 test.py
+*.csv
