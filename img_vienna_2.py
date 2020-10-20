@@ -8,6 +8,7 @@ import pandas as pd
 from sqlalchemy import create_engine
 import xmltodict, json
 
+
 class DataBase:
     def __init__(self, host, user, password, database_name):
         self.host = host
@@ -30,9 +31,9 @@ class DataBase:
         self.TABLELIST = table_list
 
     def executeSQL(self, sql):
-        #create new table: "CREATE TABLE book_details(book_id INT(5), title VARCHAR(20), price INT(5))"
-        #alter table(ADD COLUMN): "ALTER TABLE book_details ADD column_name datatype"
-        #alter table(MODIFY COLUMN): "ALTER TABLE book_details MODIFY column_name datatype"
+        # create new table: "CREATE TABLE book_details(book_id INT(5), title VARCHAR(20), price INT(5))"
+        # alter table(ADD COLUMN): "ALTER TABLE book_details ADD column_name datatype"
+        # alter table(MODIFY COLUMN): "ALTER TABLE book_details MODIFY column_name datatype"
         self.conn.execute(sql)
 
     def appendDataFrameToTable(self, df, table_name):
@@ -58,6 +59,7 @@ class DataBase:
     def dropTable(self, table_name):
         sql = f'DROP TABLE {table_name};'
         self.conn.execute(sql)
+
 
 class DATE:
     def __init__(self, last_year, last_month=1):
@@ -97,6 +99,7 @@ class DATE:
             self.makeDateList()
         return self.start_full_date_list, self.end_full_date_list
 
+
 class URL:
     def __init__(self, start_date, end_date, api_key):
         self.BASIC_URL = 'http://plus.kipris.or.kr/kipo-api/kipi/trademarkInfoSearchService/getAdvancedSearch?'
@@ -129,6 +132,7 @@ class URL:
                    f'{self.TRADEMARKSERVICEMARK}{self.BUSINESSEMBLEM}{self.COLLECTIVEMARK}{self.INTERNATIONALMARK}{self.CHARACTER}{self.FIGURE}{self.COMPOSITIONCHARACTER}{self.NUMOFROWS}' \
                    f'&pageNo={str(idx)}{self.APPLICATIONDATE}{self.SERVICEKEY}'
         return self.URL
+
 
 class PARSE_API():
     def __init__(self, url):
@@ -199,7 +203,6 @@ class PARSE_API():
             return 1
 
 
-
 class MAKEPATH:
     def __init__(self, img_save_folder):
         self.IMG_SAVE_FOLDER = img_save_folder
@@ -209,16 +212,14 @@ class MAKEPATH:
         save_path = os.path.join(self.IMG_SAVE_FOLDER, f'{app_num}.jpg')
         return save_path
 
+
 class DOWNLOAD:
     def __init__(self, database, make_path, biblo_table_name, date_table_name):
         self.DB = database
         self.MAKE_PATH = make_path
         self.BIBLO_TABLE_NAME = biblo_table_name
         self.DATE_TABLE_NAME = date_table_name
-        self.BIBLO_LIST = ['agentName', 'applicationDate', 'applicationNumber', 'applicationStatus', 'classificationCode',
-                           'internationalRegisterDate', 'internationalRegisterNumber', 'priorityDate','priorityNumber', 'publicationDate',
-                           'publicationNumber', 'regPrivilegeName', 'regReferenceNumber', 'registrationDate', 'registrationNumber',
-                           'registrationPublicDate', 'registrationPublicNumber', 'title', 'viennaCode', 'bigDrawing', 'drawing']
+        self.BIBLO_LIST = ['applicationNumber']
         self.BIBLIO_DF = pd.DataFrame(columns=self.BIBLO_LIST)
 
     def bibloDfInit(self):
@@ -327,6 +328,7 @@ class DOWNLOAD:
         self.DB.appendDataFrameToTable(df=self.BIBLIO_DF, table_name=self.BIBLO_TABLE_NAME)
         self.bibloDfInit()
 
+
 class EXECUTE():
     def __init__(self, database, download, api_key):
         self.DB = database
@@ -337,15 +339,15 @@ class EXECUTE():
         self.TOTAL_PAGE = 0
         self.API_KEY = api_key
         self.END_YEAR = 2005
-    
+
     def getLastYearAndMonth(self):
         sql = f'select * from {self.DOWNLOAD.DATE_TABLE_NAME};'
         result = self.DB.conn.execute(sql)
         row = result.fetchall()
-        self.LAST_YEAR = int(row[len(row)-1][0][0:4])
-        self.LAST_MONTH = int(row[len(row)-1][0][4:6])
-        self.LAST_PAGE = row[len(row)-1][1] + 1
-        self.TOTAL_PAGE = row[len(row)-1][2]
+        self.LAST_YEAR = int(row[len(row) - 1][0][0:4])
+        self.LAST_MONTH = int(row[len(row) - 1][0][4:6])
+        self.LAST_PAGE = row[len(row) - 1][1] + 1
+        self.TOTAL_PAGE = row[len(row) - 1][2]
         return self.LAST_YEAR, self.LAST_MONTH, self.LAST_PAGE, self.TOTAL_PAGE
 
     def downloadImgAndBiblo(self, idx, page_num, start_date, end_date):
